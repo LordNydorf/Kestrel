@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import '../core/constants/symbols.dart';
 import '../core/theme/app_theme.dart';
 import '../features/market_overview/screens/market_overview_screen.dart';
+import '../features/watchlists/screens/watchlist_detail_screen.dart';
+import '../features/watchlists/screens/watchlist_list_screen.dart';
 
 /// Root navigation key.
 final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -31,11 +33,7 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/watchlists',
           pageBuilder: (context, state) => const NoTransitionPage(
-            child: _PlaceholderTabScreen(
-              title: 'Watchlists',
-              icon: Icons.bookmark_border_outlined,
-              description: 'Watchlists CRUD (Step 2 Milestone)',
-            ),
+            child: WatchlistListScreen(),
           ),
         ),
         GoRoute(
@@ -52,6 +50,14 @@ final appRouter = GoRouter(
     ),
 
     // Pushed Routes (Outside Shell)
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/watchlists/:id',
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+        return WatchlistDetailScreen(watchlistId: id);
+      },
+    ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/ticket',
