@@ -65,6 +65,9 @@ class MarketDataService {
   /// Stream of all market ticks across all symbols.
   Stream<PriceTick> get allTicks => _allTicksController.stream;
 
+  /// Snapshot map of all current prices keyed by symbol.
+  Map<String, Money> get allSnapshots => Map.unmodifiable(_currentPrices);
+
   /// Stream of ticks for a specific symbol only.
   Stream<PriceTick> tickStreamFor(String symbol) {
     final controller = _symbolControllers[symbol];

@@ -6,6 +6,7 @@ import '../features/market_overview/screens/market_overview_screen.dart';
 import '../features/watchlists/screens/watchlist_detail_screen.dart';
 import '../features/watchlists/screens/watchlist_list_screen.dart';
 
+import '../features/holdings/screens/holdings_screen.dart';
 import '../features/ticket/screens/order_confirmation_screen.dart';
 import '../features/ticket/screens/ticket_screen.dart';
 import '../domain/models/order.dart';
@@ -43,11 +44,7 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/holdings',
           pageBuilder: (context, state) => const NoTransitionPage(
-            child: _PlaceholderTabScreen(
-              title: 'Holdings',
-              icon: Icons.pie_chart_outline,
-              description: 'Holdings & Realtime P&L (Step 4 Milestone)',
-            ),
+            child: HoldingsScreen(),
           ),
         ),
       ],
@@ -151,45 +148,6 @@ class _AppShell extends StatelessWidget {
             label: 'Holdings',
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Placeholder screen for upcoming tabs.
-class _PlaceholderTabScreen extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final String description;
-
-  const _PlaceholderTabScreen({
-    required this.title,
-    required this.icon,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title, style: AppTypography.titleLarge)),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 48, color: AppColors.muted),
-              const SizedBox(height: 16),
-              Text(title, style: AppTypography.titleLarge),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: AppTypography.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

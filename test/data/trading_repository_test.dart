@@ -140,6 +140,16 @@ class FakeTradingRepository implements TradingRepository {
     return order;
   }
 
+  void seedHolding(Holding holding) {
+    _holdings[holding.symbol] = holding;
+    _holdingsController.add(_holdings.values.where((h) => h.quantity > 0).toList());
+  }
+
+  void seedOrder(Order order) {
+    _orders.insert(0, order);
+    _ordersController.add(List.unmodifiable(_orders));
+  }
+
   @override
   void dispose() {
     _walletController.close();

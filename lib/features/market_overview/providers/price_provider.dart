@@ -10,6 +10,12 @@ final marketDataServiceProvider = Provider<MarketDataService>((ref) {
   return service;
 });
 
+/// Global stream of all ticks.
+final allTicksStreamProvider = StreamProvider<PriceTick>((ref) {
+  final feed = ref.watch(marketDataServiceProvider);
+  return feed.allTicks;
+});
+
 /// Fine-grained StreamProvider for a specific stock symbol.
 ///
 /// Ensures only widgets listening to THIS symbol rebuild on an incoming tick.
