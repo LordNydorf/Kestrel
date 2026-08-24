@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kestrel/core/constants/symbols.dart';
 import 'package:kestrel/core/money/money.dart';
 import 'package:kestrel/data/feed/market_data_service.dart';
-import 'package:kestrel/domain/models/holding.dart';
 import 'package:kestrel/domain/models/order.dart';
 import 'package:kestrel/domain/services/order_validator.dart';
 import 'package:kestrel/domain/services/pnl_calculator.dart';
