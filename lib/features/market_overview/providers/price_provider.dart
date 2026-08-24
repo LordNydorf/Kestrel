@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/constants/symbols.dart';
-import '../../../core/money/money.dart';
 import '../../../data/feed/market_data_service.dart';
 import '../../../data/feed/price_tick.dart';
 
@@ -43,8 +41,3 @@ class TickRateNotifier extends StateNotifier<double> {
     _feed.setTickRate(rate);
   }
 }
-
-/// In-memory mock wallet balance provider (initialized to ₹1,00,000.00).
-final walletBalanceProvider = StateProvider<Money>((ref) {
-  return Universe.initialWalletBalance;
-});

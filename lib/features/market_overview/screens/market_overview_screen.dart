@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/symbols.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../ticket/providers/trading_providers.dart';
 import '../providers/price_provider.dart';
 import '../widgets/price_cell.dart';
 
@@ -48,7 +49,7 @@ class MarketOverviewScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 _RateOption(
-                  label: '2.5x Fast (2.5 ticks/sec/symbol = 25 ticks/sec)',
+                  label: '2.5x Fast (25 ticks/sec)',
                   value: 2.5,
                   currentValue: currentRate,
                   onSelect: (val) {
@@ -58,7 +59,7 @@ class MarketOverviewScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 _RateOption(
-                  label: '5.0x Stress Load (5 ticks/sec/symbol = 50+ ticks/sec)',
+                  label: '5.0x Turbo Stress (50 ticks/sec)',
                   value: 5.0,
                   currentValue: currentRate,
                   onSelect: (val) {
@@ -66,6 +67,7 @@ class MarketOverviewScreen extends ConsumerWidget {
                     Navigator.pop(ctx);
                   },
                 ),
+                const SizedBox(height: 12),
               ],
             ),
           ),
@@ -76,7 +78,8 @@ class MarketOverviewScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final walletBalance = ref.watch(walletBalanceProvider);
+    final walletAsync = ref.watch(walletBalanceProvider);
+    final walletBalance = walletAsync.value ?? Universe.initialWalletBalance;
     final tickRate = ref.watch(tickRateControllerProvider);
 
     return Scaffold(

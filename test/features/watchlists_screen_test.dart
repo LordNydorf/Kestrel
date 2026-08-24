@@ -2,17 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:kestrel/features/watchlists/providers/watchlist_providers.dart';
 import 'package:kestrel/features/watchlists/screens/watchlist_detail_screen.dart';
 import 'package:kestrel/features/watchlists/screens/watchlist_list_screen.dart';
 import '../data/watchlist_repository_test.dart';
 
 void main() {
-  setUpAll(() {
-    GoogleFonts.config.allowRuntimeFetching = false;
-  });
-
   group('Watchlists Screen Widget Tests', () {
     late FakeWatchlistRepository fakeRepo;
 

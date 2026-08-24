@@ -3,13 +3,6 @@ import '../../../data/db/app_database.dart';
 import '../../../data/repositories/watchlist_repository.dart';
 import '../../../domain/models/watchlist.dart';
 
-/// Database singleton provider.
-final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  final db = AppDatabase();
-  ref.onDispose(() => db.close());
-  return db;
-});
-
 /// Watchlist repository provider.
 final watchlistRepositoryProvider = Provider<WatchlistRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);

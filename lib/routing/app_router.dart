@@ -6,6 +6,10 @@ import '../features/market_overview/screens/market_overview_screen.dart';
 import '../features/watchlists/screens/watchlist_detail_screen.dart';
 import '../features/watchlists/screens/watchlist_list_screen.dart';
 
+import '../features/ticket/screens/order_confirmation_screen.dart';
+import '../features/ticket/screens/ticket_screen.dart';
+import '../domain/models/order.dart';
+
 /// Root navigation key.
 final GlobalKey<NavigatorState> _rootNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -60,10 +64,26 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
+      path: '/ticket/:symbol',
+      builder: (context, state) {
+        final symbol = state.pathParameters['symbol'] ?? 'RELIANCE';
+        return TicketScreen(symbol: symbol);
+      },
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
       path: '/ticket',
       builder: (context, state) {
         final stock = state.extra as StockDefinition? ?? Universe.reliance;
-        return _PlaceholderTicketScreen(stock: stock);
+        return TicketScreen(symbol: stock.symbol);
+      },
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/order-confirmation',
+      builder: (context, state) {
+        final order = state.extra as Order;
+        return OrderConfirmationScreen(order: order);
       },
     ),
   ],
@@ -166,50 +186,6 @@ class _PlaceholderTabScreen extends StatelessWidget {
                 description,
                 style: AppTypography.bodyMedium,
                 textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Placeholder screen for ticket.
-class _PlaceholderTicketScreen extends StatelessWidget {
-  final StockDefinition stock;
-
-  const _PlaceholderTicketScreen({required this.stock});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('${stock.symbol} Ticket', style: AppTypography.titleLarge),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                stock.name,
-                style: AppTypography.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Buy/Sell Ticket (Step 3 Milestone)',
-                style: AppTypography.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => context.pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.surfaceHover,
-                  foregroundColor: AppColors.ink,
-                ),
-                child: const Text('Back to Market'),
               ),
             ],
           ),

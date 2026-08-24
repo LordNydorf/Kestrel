@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../../core/constants/symbols.dart';
@@ -112,3 +113,10 @@ class AppDatabase {
     }
   }
 }
+
+/// Riverpod provider for singleton AppDatabase
+final appDatabaseProvider = Provider<AppDatabase>((ref) {
+  final db = AppDatabase();
+  ref.onDispose(() => db.close());
+  return db;
+});
