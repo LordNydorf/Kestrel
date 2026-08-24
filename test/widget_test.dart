@@ -26,8 +26,9 @@ void main() {
       ),
     );
 
-    // Initial frame
+    // Initial frame and splash screen auto-navigation (1800ms)
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 2000));
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verify Title & NSE feed tag

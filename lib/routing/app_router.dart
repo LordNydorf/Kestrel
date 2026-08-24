@@ -7,6 +7,7 @@ import '../features/watchlists/screens/watchlist_detail_screen.dart';
 import '../features/watchlists/screens/watchlist_list_screen.dart';
 
 import '../features/holdings/screens/holdings_screen.dart';
+import '../features/splash/screens/splash_screen.dart';
 import '../features/ticket/screens/order_confirmation_screen.dart';
 import '../features/ticket/screens/ticket_screen.dart';
 import '../domain/models/order.dart';
@@ -20,8 +21,15 @@ final GlobalKey<NavigatorState> _shellNavigatorKey =
 /// GoRouter configuration for Kestrel Mobile.
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/market',
+  initialLocation: '/splash',
   routes: [
+    // Splash Route (Root Navigator)
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/splash',
+      builder: (context, state) => const SplashScreen(),
+    ),
+
     // Bottom Navigation Shell (Market, Watchlists, Holdings)
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
