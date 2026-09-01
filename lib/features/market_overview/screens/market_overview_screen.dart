@@ -3,13 +3,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/symbols.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/haptics.dart';
 import '../../ticket/providers/trading_providers.dart';
 import '../providers/price_provider.dart';
 import '../widgets/price_cell.dart';
 
-/// Market Overview Screen displaying the live ticking 10-stock NSE universe.
-class MarketOverviewScreen extends ConsumerWidget {
+final marketSearchQueryProvider = StateProvider<String>((ref) => '');
+final marketSectorFilterProvider = StateProvider<String>((ref) => 'All');
+
+/// Market Overview Screen with Real-Time Search, Sector Screener, and Live Feeds.
+class MarketOverviewScreen extends ConsumerStatefulWidget {
   const MarketOverviewScreen({super.key});
+
+  @override
+  ConsumerState<MarketOverviewScreen> createState() => _MarketOverviewScreenState();
+}
+
+class _MarketOverviewScreenState extends ConsumerState<MarketOverviewScreen> {
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void _showStressTestDialog(BuildContext context, WidgetRef ref) {
     final currentRate = ref.read(tickRateControllerProvider);
@@ -43,6 +66,7 @@ class MarketOverviewScreen extends ConsumerWidget {
                   value: 1.0,
                   currentValue: currentRate,
                   onSelect: (val) {
+                    Haptics.selection();
                     ref.read(tickRateControllerProvider.notifier).setRate(val);
                     Navigator.pop(ctx);
                   },
@@ -53,6 +77,7 @@ class MarketOverviewScreen extends ConsumerWidget {
                   value: 2.5,
                   currentValue: currentRate,
                   onSelect: (val) {
+                    Haptics.selection();
                     ref.read(tickRateControllerProvider.notifier).setRate(val);
                     Navigator.pop(ctx);
                   },
@@ -63,6 +88,7 @@ class MarketOverviewScreen extends ConsumerWidget {
                   value: 5.0,
                   currentValue: currentRate,
                   onSelect: (val) {
+                    Haptics.heavy();
                     ref.read(tickRateControllerProvider.notifier).setRate(val);
                     Navigator.pop(ctx);
                   },
@@ -77,10 +103,27 @@ class MarketOverviewScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final walletAsync = ref.watch(walletBalanceProvider);
     final walletBalance = walletAsync.value ?? Universe.initialWalletBalance;
     final tickRate = ref.watch(tickRateControllerProvider);
+
+    final searchQuery = ref.watch(marketSearchQueryProvider).toLowerCase();
+    final selectedSector = ref.watch(marketSectorFilterProvider);
+
+    // Filter stocks by query and sector
+    final filteredStocks = Universe.all.where((stock) {
+      final matchesQuery = searchQuery.isEmpty ||
+          stock.symbol.toLowerCase().contains(searchQuery) ||
+          stock.name.toLowerCase().contains(searchQuery);
+
+      final matchesSector = selectedSector == 'All' ||
+          stock.sector.toLowerCase().contains(selectedSector.toLowerCase());
+
+      return matchesQuery && matchesSector;
+    }).toList();
+
+    const sectors = ['All', 'Banking', 'Technology', 'Energy', 'Consumer', 'Auto'];
 
     return Scaffold(
       appBar: AppBar(
@@ -149,9 +192,92 @@ class MarketOverviewScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Market Status Subheader
+            // 1. Search Bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search_rounded, size: 18, color: AppColors.muted),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        style: AppTypography.bodyMedium,
+                        decoration: InputDecoration(
+                          hintText: 'Search stocks, indices, sectors...',
+                          hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.muted),
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                        onChanged: (val) {
+                          ref.read(marketSearchQueryProvider.notifier).state = val;
+                        },
+                      ),
+                    ),
+                    if (searchQuery.isNotEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          _searchController.clear();
+                          ref.read(marketSearchQueryProvider.notifier).state = '';
+                        },
+                        child: const Icon(Icons.close_rounded, size: 18, color: AppColors.muted),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 2. Sector Filter Chips Bar
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: sectors.map((sector) {
+                  final isSelected = selectedSector == sector;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        Haptics.selection();
+                        ref.read(marketSectorFilterProvider.notifier).state = sector;
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.accent : AppColors.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected ? AppColors.accent : AppColors.border,
+                          ),
+                        ),
+                        child: Text(
+                          sector,
+                          style: AppTypography.labelSmall.copyWith(
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected ? Colors.white : AppColors.muted,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // 3. Market Status Subheader
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               color: AppColors.surface,
               child: Row(
                 children: [
@@ -173,7 +299,7 @@ class MarketOverviewScreen extends ConsumerWidget {
                   ),
                   const Spacer(),
                   Text(
-                    '10 Instruments',
+                    '${filteredStocks.length} Instruments',
                     style: AppTypography.labelSmall,
                   ),
                 ],
@@ -182,21 +308,29 @@ class MarketOverviewScreen extends ConsumerWidget {
 
             const Divider(height: 1),
 
-            // Stocks List (Keyed by symbol for stable diffing)
+            // 4. Stocks List
             Expanded(
-              child: ListView.builder(
-                itemCount: Universe.all.length,
-                itemBuilder: (context, index) {
-                  final stock = Universe.all[index];
-                  return PriceCell(
-                    key: ValueKey('market_stock_${stock.symbol}'),
-                    stock: stock,
-                    onTap: () {
-                      context.push('/ticket', extra: stock);
-                    },
-                  );
-                },
-              ),
+              child: filteredStocks.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No matching stocks found for "$searchQuery"',
+                        style: AppTypography.bodyMedium.copyWith(color: AppColors.muted),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: filteredStocks.length,
+                      itemBuilder: (context, index) {
+                        final stock = filteredStocks[index];
+                        return PriceCell(
+                          key: ValueKey('market_stock_${stock.symbol}'),
+                          stock: stock,
+                          onTap: () {
+                            Haptics.medium();
+                            context.push('/ticket', extra: stock);
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),

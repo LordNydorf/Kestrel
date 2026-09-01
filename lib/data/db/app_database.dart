@@ -8,7 +8,7 @@ import '../../core/constants/symbols.dart';
 /// Encapsulates schema creation, foreign key enforcement, and connection lifecycle.
 class AppDatabase {
   static const String _dbName = 'kestrel.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
 
   Database? _db;
 
@@ -32,6 +32,7 @@ class AppDatabase {
       version: _dbVersion,
       onConfigure: _onConfigure,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -69,26 +70,32 @@ class AppDatabase {
     batch.execute('''
       CREATE TABLE wallet (
         id INTEGER PRIMARY KEY CHECK (id = 1),
-        balance_paise INTEGER NOT NULL
+        balance_paise INTEGER NOT NULL,
+        locked_paise INTEGER NOT NULL DEFAULT 0
       );
     ''');
 
     // Seed initial wallet balance (₹1,00,000.00 = 10,000,000 paise)
     batch.rawInsert('''
-      INSERT INTO wallet (id, balance_paise)
-      VALUES (1, ?)
+      INSERT INTO wallet (id, balance_paise, locked_paise)
+      VALUES (1, ?, 0)
     ''', [Universe.initialWalletBalance.paise]);
 
-    // 4. Orders table (history)
+    // 4. Orders table (history & pending orders)
     batch.execute('''
       CREATE TABLE orders (
         id TEXT PRIMARY KEY,
         symbol TEXT NOT NULL,
         side TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'MARKET',
+        status TEXT NOT NULL DEFAULT 'EXECUTED',
         quantity INTEGER NOT NULL,
         price_paise INTEGER NOT NULL,
+        trigger_price_paise INTEGER,
         value_paise INTEGER NOT NULL,
-        timestamp INTEGER NOT NULL
+        realized_pnl_paise INTEGER DEFAULT 0,
+        timestamp INTEGER NOT NULL,
+        executed_at INTEGER
       );
     ''');
 
@@ -103,6 +110,33 @@ class AppDatabase {
     ''');
 
     await batch.commit(noResult: true);
+  }
+
+  /// Schema migration handler
+  static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add locked_paise to wallet
+      await db.execute(
+        'ALTER TABLE wallet ADD COLUMN locked_paise INTEGER NOT NULL DEFAULT 0;',
+      );
+
+      // Add v2 columns to orders
+      await db.execute(
+        "ALTER TABLE orders ADD COLUMN type TEXT NOT NULL DEFAULT 'MARKET';",
+      );
+      await db.execute(
+        "ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'EXECUTED';",
+      );
+      await db.execute(
+        'ALTER TABLE orders ADD COLUMN trigger_price_paise INTEGER;',
+      );
+      await db.execute(
+        'ALTER TABLE orders ADD COLUMN realized_pnl_paise INTEGER DEFAULT 0;',
+      );
+      await db.execute(
+        'ALTER TABLE orders ADD COLUMN executed_at INTEGER;',
+      );
+    }
   }
 
   /// Close the database.

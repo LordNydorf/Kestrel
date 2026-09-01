@@ -1,17 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/money/money.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/haptics.dart';
 import '../../ticket/providers/trading_providers.dart';
 import '../providers/holdings_providers.dart';
 
 class PortfolioSummaryCard extends ConsumerWidget {
   const PortfolioSummaryCard({super.key});
 
+  void _showWalletSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surfaceElevated,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Manage Virtual Funds',
+                  style: AppTypography.titleLarge,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Add mock paper trading capital or reset your balance:',
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.muted),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () async {
+                          Haptics.heavy();
+                          await ref
+                              .read(tradingRepositoryProvider)
+                              .depositFunds(Money.fromRupees(50000));
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        child: const Text('+₹50,000 Deposit'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () async {
+                          Haptics.heavy();
+                          await ref
+                              .read(tradingRepositoryProvider)
+                              .depositFunds(Money.fromRupees(100000));
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        child: const Text('+₹1,00,000 Deposit'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.loss,
+                    side: BorderSide(color: AppColors.loss.withValues(alpha: 0.5)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () async {
+                    Haptics.heavy();
+                    await ref.read(tradingRepositoryProvider).resetPortfolio();
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  child: const Text('Reset All to ₹1,00,000 (Clear Data)'),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(portfolioSummaryProvider);
     final walletAsync = ref.watch(walletBalanceProvider);
-    final wallet = walletAsync.value ?? ref.read(walletBalanceProvider).value;
+    final wallet = walletAsync.value ?? Money.fromRupees(100000);
 
     final isGain = summary.isGain;
     final isLoss = summary.isLoss;
@@ -37,7 +135,7 @@ class PortfolioSummaryCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Label
+          // Header Label + Manage Funds Button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -49,19 +147,55 @@ class PortfolioSummaryCard extends ConsumerWidget {
                   color: AppColors.muted,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceHover,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '${summary.totalHoldingsCount} ${summary.totalHoldingsCount == 1 ? 'STOCK' : 'STOCKS'}',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.muted,
-                    fontWeight: FontWeight.w600,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceHover,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${summary.totalHoldingsCount} ${summary.totalHoldingsCount == 1 ? 'STOCK' : 'STOCKS'}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.muted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () {
+                      Haptics.selection();
+                      _showWalletSheet(context, ref);
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.add_circle_outline, size: 12, color: AppColors.accent),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Funds',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.accent,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -95,13 +229,37 @@ class PortfolioSummaryCard extends ConsumerWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                'Overall Returns',
+                'Unrealized P&L',
                 style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.muted,
                 ),
               ),
             ],
           ),
+
+          // Realized P&L Pill (if closed positions exist)
+          if (!summary.realizedPnl.isZero) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: summary.realizedPnl.paise > 0
+                    ? AppColors.gainTint
+                    : AppColors.lossTint,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                'Realized P&L: ${summary.realizedPnl.paise > 0 ? '+' : ''}${summary.realizedPnl.format()}',
+                style: AppTypography.numericSmall.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: summary.realizedPnl.paise > 0
+                      ? AppColors.gain
+                      : AppColors.loss,
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 16),
           const Divider(color: AppColors.border, height: 1),
@@ -151,7 +309,7 @@ class PortfolioSummaryCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      wallet?.format() ?? '₹0.00',
+                      wallet.format(),
                       style: AppTypography.numericMedium.copyWith(
                         color: AppColors.ink,
                         fontWeight: FontWeight.w600,

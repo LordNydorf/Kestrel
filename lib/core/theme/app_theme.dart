@@ -63,6 +63,12 @@ class AppTypography {
         color: AppColors.muted,
       );
 
+  static TextStyle get bodySmall => GoogleFonts.spaceGrotesk(
+        fontSize: 11,
+        fontWeight: FontWeight.w400,
+        color: AppColors.muted,
+      );
+
   static TextStyle get labelSmall => GoogleFonts.spaceGrotesk(
         fontSize: 11,
         fontWeight: FontWeight.w500,

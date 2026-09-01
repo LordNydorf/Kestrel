@@ -20,9 +20,11 @@ class OrderValidator {
 
   static OrderValidationResult validate({
     required OrderSide side,
+    OrderType type = OrderType.market,
     required String symbol,
     required int quantity,
     required Money price,
+    Money? triggerPrice,
     required Money walletBalance,
     required Holding? holding,
   }) {
@@ -31,10 +33,20 @@ class OrderValidator {
     }
 
     if (price.isZero || price.paise < 0) {
-      return OrderValidationResult.invalid('Invalid market price');
+      return OrderValidationResult.invalid('Invalid order price');
     }
 
-    final orderValue = price * quantity;
+    if (type == OrderType.stopLoss) {
+      if (triggerPrice == null || triggerPrice.isZero || triggerPrice.paise < 0) {
+        return OrderValidationResult.invalid('Valid trigger price is required for Stop-Loss');
+      }
+    }
+
+    // Effective price used for sizing check
+    final effectivePrice = (type == OrderType.stopLoss && triggerPrice != null)
+        ? triggerPrice
+        : price;
+    final orderValue = effectivePrice * quantity;
 
     if (side == OrderSide.buy) {
       if (orderValue > walletBalance) {

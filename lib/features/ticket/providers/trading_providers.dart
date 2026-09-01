@@ -17,6 +17,11 @@ final walletBalanceProvider = StreamProvider<Money>((ref) {
   return repo.watchWalletBalance();
 });
 
+final lockedWalletBalanceProvider = StreamProvider<Money>((ref) {
+  final repo = ref.watch(tradingRepositoryProvider);
+  return repo.watchLockedBalance();
+});
+
 final holdingsProvider = StreamProvider<List<Holding>>((ref) {
   final repo = ref.watch(tradingRepositoryProvider);
   return repo.watchHoldings();
@@ -74,16 +79,20 @@ class TradingController extends StateNotifier<TradingState> {
   Future<Order?> executeOrder({
     required String symbol,
     required OrderSide side,
+    OrderType type = OrderType.market,
     required int quantity,
     required Money price,
+    Money? triggerPrice,
   }) async {
     state = state.copyWith(isExecuting: true, errorMessage: null);
     try {
-      final order = await _repository.executeOrder(
+      final order = await _repository.placeOrder(
         symbol: symbol,
         side: side,
+        type: type,
         quantity: quantity,
         price: price,
+        triggerPrice: triggerPrice,
       );
       state = state.copyWith(
         isExecuting: false,
@@ -97,6 +106,16 @@ class TradingController extends StateNotifier<TradingState> {
         errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('StateError: ', ''),
       );
       return null;
+    }
+  }
+
+  Future<void> cancelOrder(String orderId) async {
+    try {
+      await _repository.cancelOrder(orderId);
+    } catch (e) {
+      state = state.copyWith(
+        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('StateError: ', ''),
+      );
     }
   }
 

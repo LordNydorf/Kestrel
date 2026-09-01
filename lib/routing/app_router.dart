@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/symbols.dart';
 import '../core/theme/app_theme.dart';
+import '../core/utils/haptics.dart';
 import '../features/market_overview/screens/market_overview_screen.dart';
+import '../features/orders/screens/orders_screen.dart';
 import '../features/watchlists/screens/watchlist_detail_screen.dart';
 import '../features/watchlists/screens/watchlist_list_screen.dart';
-
 import '../features/holdings/screens/holdings_screen.dart';
 import '../features/splash/screens/splash_screen.dart';
 import '../features/ticket/screens/order_confirmation_screen.dart';
@@ -18,7 +19,7 @@ final GlobalKey<NavigatorState> _rootNavigatorKey =
 final GlobalKey<NavigatorState> _shellNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'shell');
 
-/// GoRouter configuration for Kestrel Mobile.
+/// GoRouter configuration for Kestrel Mobile (4 Primary Tabs).
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/splash',
@@ -30,7 +31,7 @@ final appRouter = GoRouter(
       builder: (context, state) => const SplashScreen(),
     ),
 
-    // Bottom Navigation Shell (Market, Watchlists, Holdings)
+    // Bottom Navigation Shell (Market, Watchlists, Holdings, Orders)
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) {
@@ -53,6 +54,12 @@ final appRouter = GoRouter(
           path: '/holdings',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: HoldingsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/orders',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: OrdersScreen(),
           ),
         ),
       ],
@@ -94,7 +101,7 @@ final appRouter = GoRouter(
   ],
 );
 
-/// Mobile bottom navigation container.
+/// Mobile 4-Tab bottom navigation container.
 class _AppShell extends StatelessWidget {
   final Widget child;
 
@@ -105,10 +112,12 @@ class _AppShell extends StatelessWidget {
     if (location.startsWith('/market')) return 0;
     if (location.startsWith('/watchlists')) return 1;
     if (location.startsWith('/holdings')) return 2;
+    if (location.startsWith('/orders')) return 3;
     return 0;
   }
 
   void _onItemTapped(int index, BuildContext context) {
+    Haptics.selection();
     switch (index) {
       case 0:
         context.go('/market');
@@ -119,6 +128,9 @@ class _AppShell extends StatelessWidget {
       case 2:
         context.go('/holdings');
         break;
+      case 3:
+        context.go('/orders');
+        break;
     }
   }
 
@@ -128,34 +140,46 @@ class _AppShell extends StatelessWidget {
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selectedIndex,
-        onTap: (index) => _onItemTapped(index, context),
-        backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.accent,
-        unselectedItemColor: AppColors.muted,
-        selectedLabelStyle: AppTypography.labelSmall.copyWith(
-          fontWeight: FontWeight.w700,
-          color: AppColors.accent,
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.border, width: 1.0)),
         ),
-        unselectedLabelStyle: AppTypography.labelSmall,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart_rounded),
-            activeIcon: Icon(Icons.show_chart_rounded, color: AppColors.accent),
-            label: 'Market',
+        child: BottomNavigationBar(
+          currentIndex: selectedIndex,
+          onTap: (index) => _onItemTapped(index, context),
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: AppColors.surface,
+          selectedItemColor: AppColors.accent,
+          unselectedItemColor: AppColors.muted,
+          selectedLabelStyle: AppTypography.labelSmall.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.accent,
+            fontSize: 11,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark_outline_rounded),
-            activeIcon: Icon(Icons.bookmark_rounded, color: AppColors.accent),
-            label: 'Watchlists',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.pie_chart_outline_rounded),
-            activeIcon: Icon(Icons.pie_chart_rounded, color: AppColors.accent),
-            label: 'Holdings',
-          ),
-        ],
+          unselectedLabelStyle: AppTypography.labelSmall.copyWith(fontSize: 11),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.show_chart_rounded),
+              activeIcon: Icon(Icons.show_chart_rounded, color: AppColors.accent),
+              label: 'Market',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bookmark_outline_rounded),
+              activeIcon: Icon(Icons.bookmark_rounded, color: AppColors.accent),
+              label: 'Watchlists',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.pie_chart_outline_rounded),
+              activeIcon: Icon(Icons.pie_chart_rounded, color: AppColors.accent),
+              label: 'Holdings',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.receipt_long_outlined),
+              activeIcon: Icon(Icons.receipt_long_rounded, color: AppColors.accent),
+              label: 'Orders',
+            ),
+          ],
+        ),
       ),
     );
   }
