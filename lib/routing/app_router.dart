@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/symbols.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/haptics.dart';
+import '../domain/services/order_matching_daemon.dart';
 import '../features/market_overview/screens/market_overview_screen.dart';
 import '../features/orders/screens/orders_screen.dart';
 import '../features/watchlists/screens/watchlist_detail_screen.dart';
@@ -101,11 +104,61 @@ final appRouter = GoRouter(
   ],
 );
 
-/// Mobile 4-Tab bottom navigation container.
-class _AppShell extends StatelessWidget {
+/// Mobile 4-Tab bottom navigation container with auto-matching daemon listener.
+class _AppShell extends ConsumerStatefulWidget {
   final Widget child;
 
   const _AppShell({required this.child});
+
+  @override
+  ConsumerState<_AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<_AppShell> {
+  StreamSubscription? _eventSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final daemon = ref.read(orderMatchingDaemonProvider);
+      _eventSubscription = daemon.executionEvents.listen((event) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.surfaceElevated,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: AppColors.accent),
+            ),
+            duration: const Duration(seconds: 3),
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: AppColors.gain, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Order Filled! ${event.order.side.label} ${event.order.quantity} ${event.order.symbol} @ ${event.executionPrice.format()}',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _eventSubscription?.cancel();
+    super.dispose();
+  }
 
   int _calculateSelectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -139,7 +192,7 @@ class _AppShell extends StatelessWidget {
     final selectedIndex = _calculateSelectedIndex(context);
 
     return Scaffold(
-      body: child,
+      body: widget.child,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.border, width: 1.0)),

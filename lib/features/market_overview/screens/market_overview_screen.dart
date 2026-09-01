@@ -4,12 +4,23 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/symbols.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/haptics.dart';
+import '../../holdings/providers/holdings_providers.dart';
 import '../../ticket/providers/trading_providers.dart';
 import '../providers/price_provider.dart';
 import '../widgets/price_cell.dart';
 
+enum ScreenerMode {
+  all('All Instruments'),
+  gainers('Top Gainers'),
+  losers('Top Losers');
+
+  final String label;
+  const ScreenerMode(this.label);
+}
+
 final marketSearchQueryProvider = StateProvider<String>((ref) => '');
 final marketSectorFilterProvider = StateProvider<String>((ref) => 'All');
+final marketScreenerModeProvider = StateProvider<ScreenerMode>((ref) => ScreenerMode.all);
 
 /// Market Overview Screen with Real-Time Search, Sector Screener, and Live Feeds.
 class MarketOverviewScreen extends ConsumerStatefulWidget {
@@ -110,9 +121,11 @@ class _MarketOverviewScreenState extends ConsumerState<MarketOverviewScreen> {
 
     final searchQuery = ref.watch(marketSearchQueryProvider).toLowerCase();
     final selectedSector = ref.watch(marketSectorFilterProvider);
+    final screenerMode = ref.watch(marketScreenerModeProvider);
+    final currentPrices = ref.watch(universePricesMapProvider);
 
-    // Filter stocks by query and sector
-    final filteredStocks = Universe.all.where((stock) {
+    // 1. Filter stocks by query and sector
+    var filteredStocks = Universe.all.where((stock) {
       final matchesQuery = searchQuery.isEmpty ||
           stock.symbol.toLowerCase().contains(searchQuery) ||
           stock.name.toLowerCase().contains(searchQuery);
@@ -122,6 +135,25 @@ class _MarketOverviewScreenState extends ConsumerState<MarketOverviewScreen> {
 
       return matchesQuery && matchesSector;
     }).toList();
+
+    // 2. Sort by Screener Mode (Top Gainers vs Top Losers)
+    if (screenerMode == ScreenerMode.gainers) {
+      filteredStocks.sort((a, b) {
+        final priceA = currentPrices[a.symbol] ?? a.startingPrice;
+        final priceB = currentPrices[b.symbol] ?? b.startingPrice;
+        final pctA = (priceA.paise - a.startingPrice.paise) / a.startingPrice.paise;
+        final pctB = (priceB.paise - b.startingPrice.paise) / b.startingPrice.paise;
+        return pctB.compareTo(pctA); // Highest gainers first
+      });
+    } else if (screenerMode == ScreenerMode.losers) {
+      filteredStocks.sort((a, b) {
+        final priceA = currentPrices[a.symbol] ?? a.startingPrice;
+        final priceB = currentPrices[b.symbol] ?? b.startingPrice;
+        final pctA = (priceA.paise - a.startingPrice.paise) / a.startingPrice.paise;
+        final pctB = (priceB.paise - b.startingPrice.paise) / b.startingPrice.paise;
+        return pctA.compareTo(pctB); // Lowest losers first
+      });
+    }
 
     const sectors = ['All', 'Banking', 'Technology', 'Energy', 'Consumer', 'Auto'];
 
@@ -194,7 +226,7 @@ class _MarketOverviewScreenState extends ConsumerState<MarketOverviewScreen> {
           children: [
             // 1. Search Bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                 decoration: BoxDecoration(
@@ -234,7 +266,56 @@ class _MarketOverviewScreenState extends ConsumerState<MarketOverviewScreen> {
               ),
             ),
 
-            // 2. Sector Filter Chips Bar
+            // 2. Screener Filter Tabs (All / Gainers / Losers)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Container(
+                padding: const EdgeInsets.all(3.0),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(8.0),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: ScreenerMode.values.map((mode) {
+                    final isSelected = screenerMode == mode;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (!isSelected) {
+                            Haptics.selection();
+                            ref.read(marketScreenerModeProvider.notifier).state = mode;
+                          }
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(vertical: 6.0),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppColors.surfaceElevated : Colors.transparent,
+                            borderRadius: BorderRadius.circular(6.0),
+                            border: Border.all(
+                              color: isSelected ? AppColors.accent : Colors.transparent,
+                              width: 1.0,
+                            ),
+                          ),
+                          child: Text(
+                            mode.label,
+                            style: AppTypography.labelSmall.copyWith(
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              color: isSelected ? AppColors.accent : AppColors.muted,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+
+            // 3. Sector Filter Chips Bar
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -250,7 +331,7 @@ class _MarketOverviewScreenState extends ConsumerState<MarketOverviewScreen> {
                       },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                         decoration: BoxDecoration(
                           color: isSelected ? AppColors.accent : AppColors.surface,
                           borderRadius: BorderRadius.circular(20),
@@ -273,9 +354,9 @@ class _MarketOverviewScreenState extends ConsumerState<MarketOverviewScreen> {
               ),
             ),
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
 
-            // 3. Market Status Subheader
+            // 4. Market Status Subheader
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               color: AppColors.surface,
@@ -308,7 +389,7 @@ class _MarketOverviewScreenState extends ConsumerState<MarketOverviewScreen> {
 
             const Divider(height: 1),
 
-            // 4. Stocks List
+            // 5. Stocks List
             Expanded(
               child: filteredStocks.isEmpty
                   ? Center(

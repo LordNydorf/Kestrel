@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/holdings_providers.dart';
+import '../widgets/allocation_donut_chart.dart';
 import '../widgets/holding_row.dart';
 import '../widgets/portfolio_summary_card.dart';
 
@@ -125,6 +126,9 @@ class HoldingsScreen extends ConsumerWidget {
             slivers: [
               const SliverToBoxAdapter(
                 child: PortfolioSummaryCard(),
+              ),
+              const SliverToBoxAdapter(
+                child: AllocationDonutChart(),
               ),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(
