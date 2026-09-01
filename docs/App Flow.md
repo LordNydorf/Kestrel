@@ -106,3 +106,26 @@ Market Overview                Watchlist Detail              Buy/Sell Ticket
 - Tapping the wallet balance pill opens the **Funds Manager Sheet**:
   - Deposit Demo Capital (+₹50,000, +₹1,00,000).
   - Reset Portfolio to initial ₹1,00,000 demo state.
+
+---
+
+# 🅿️ Parking Lot & Future User Flows (v3 & Beyond)
+
+```
+[App Launch] ──▶ [Biometric FaceID / Fingerprint / PIN Gate]
+                        │
+                        ▼
+            [4-Tab Navigation Shell]
+  ┌───────────────┬────────────────┬────────────────┬────────────────┐
+  │ 1. Market     │ 2. Watchlists  │ 3. Holdings    │ 4. Orders      │
+  │ + Screener    │ + Cloud Sync   │ + Donut Alloc  │ + Cancel Action│
+  └───────┬───────┴────────────────┴────────────────┴────────────────┘
+          │
+          ▼
+   [Live Stock View]
+   ├─ Technical Chart + Indicators (EMA, RSI, MACD, Bollinger)
+   ├─ Options Chain (Calls / Puts, Strike Ladder, Greeks)
+   ├─ Set Price Alert ──▶ [Background Push Notification Trigger]
+   └─ Sticky Execution Bar
+```
+

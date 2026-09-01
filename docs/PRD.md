@@ -133,3 +133,31 @@ Fixed set of 10 NSE symbols, each with a reasonable starting price (₹):
 
 ### F12 — Tactile Haptic Feedback
 - Haptic cues across buttons, chips, tabs, and trade executions.
+
+---
+
+# 🅿️ Parking Lot & Future Roadmap (v3 & Beyond)
+
+The following items are deferred from v2 to v3+ to maintain stability and zero-dependency execution:
+
+### 1. Real Broker API & Live Exchange Gateway (v3)
+- **Live WebSocket Streams**: Integration with Zerodha Kite Connect, Upstox, or Angel One real-time WebSocket feeds.
+- **Broker Authentication**: Secure OAuth2 login and TOTP authentication for real-money execution.
+
+### 2. Cloud Database & Cross-Device Sync (v3)
+- **Supabase / Firebase Backend**: Synchronizing watchlists, active positions, and trade history across mobile, tablet, and web clients.
+- **Offline Cache First**: Local SQLite persistence with optimistic cloud synchronization.
+
+### 3. Advanced Technical Indicators & Chart Overlays (v3)
+- **Mathematical Overlays**: Real-time 20/50/200 Exponential Moving Averages (EMA), Relative Strength Index (RSI 14), Moving Average Convergence Divergence (MACD), Bollinger Bands, and Volume Weighted Average Price (VWAP).
+- **Drawing Tools**: Support for horizontal support/resistance lines and Fibonacci retracements.
+
+### 4. Derivatives & Options Chain (v4)
+- **Options Trading**: Call/Put option chain with strike ladders, Open Interest (OI) heatmaps, and Option Greeks (Delta, Theta, Gamma, Vega).
+
+### 5. Push Notifications & Price Alerts (v3)
+- **Background Price Alerts**: System notifications when target limit prices or stop-loss triggers are reached while the app is closed.
+
+### 6. Biometric Security & PIN Lock (v3)
+- **Biometric Gate**: Face ID / Fingerprint / 4-digit PIN authentication on app resume and trade execution confirmation.
+

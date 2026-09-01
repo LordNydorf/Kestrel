@@ -117,3 +117,26 @@ Kestrel v2 evolves the terminal into an institutional-grade financial trading pl
 - **Phase 6: Testing & Polish**
   - Automated unit tests for order matching, historical data, and repository v2.
   - Verification with `flutter analyze` and `flutter test`.
+
+---
+
+# 🅿️ Parking Lot & Future Roadmap (v3 & Beyond)
+
+### Phase v3.1: Live Broker WebSocket Feed & Exchange Gateway
+- Replace or complement in-memory simulation with live WebSocket gateway (`IExchangeFeed`) supporting Kite Connect / Upstox.
+- OAuth2 token management and auto-reconnection state machine.
+
+### Phase v3.2: Supabase / Firebase Cloud Sync
+- Remote cloud PostgreSQL database with Row Level Security (RLS).
+- Realtime replication of watchlists and portfolio balances across mobile, tablet, and web.
+
+### Phase v3.3: Advanced Technical Indicators & Background Isolates
+- Indicator computation engine offloaded to Dart background `Isolate`s (EMA 20/50/200, RSI 14, MACD, Bollinger Bands, VWAP).
+- Interactive indicator toggle overlay on `TechnicalChart`.
+
+### Phase v3.4: Background Price Alerts & Push Notifications
+- Local & remote push notifications when limit targets or stop-loss thresholds trigger while app is minimized.
+
+### Phase v3.5: Biometric PIN / Fingerprint Security
+- `local_auth` biometric gate for app unlock and order submission confirmation.
+

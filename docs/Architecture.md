@@ -146,3 +146,28 @@ This design directly satisfies: single source of truth (F2), correct rebinding a
 ## 2. Updated Database Schema (Orders v2 & Wallet)
 - `orders`: added `type`, `status`, `trigger_price_paise`, `realized_pnl_paise`, `executed_at`.
 - `wallet`: added `locked_paise` for pending limit buy orders.
+
+---
+
+# 🅿️ Parking Lot & Future Roadmap Architecture (v3 & Beyond)
+
+### 1. Pluggable Exchange Gateway Interface (`IExchangeFeed`)
+```
++-------------------------------------------------------+
+|                IExchangeFeed (Interface)              |
++-------------------------------------------------------+
+            ^                               ^
+            |                               |
++-----------------------+       +-----------------------+
+|  MockMarketFeed (v2)  |       |  LiveBrokerFeed (v3)  |
+|  (In-Memory Generator)|       | (Kite / Upstox WS)    |
++-----------------------+       +-----------------------+
+```
+- Decouple the UI and Riverpod providers from feed implementations via an abstract `IExchangeFeed` interface, enabling zero-code-change switching between Mock Turbo Simulator and Live Broker WebSockets.
+
+### 2. Cloud Sync Repository Layer (`SyncTradingRepository`)
+- Wrap local `TradingRepository` with an offline-first event bus replicating state mutations to a remote PostgreSQL/Supabase cluster using row-level security (RLS).
+
+### 3. Indicator Pipeline Engine (`IndicatorEngine`)
+- Pure compute pipeline running technical indicators (EMA, RSI, MACD, Bollinger Bands) over `List<CandleData>` offloaded to background Dart `Isolate`s for 120fps UI render fidelity.
+

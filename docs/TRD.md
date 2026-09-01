@@ -86,3 +86,20 @@ All writes on order submission (wallet debit/credit + holding upsert + order ins
 - Limit SELL: $\text{Tick LTP} \ge \text{Limit Price}$.
 - Stop-Loss BUY: $\text{Tick LTP} \ge \text{Trigger Price}$.
 - Stop-Loss SELL: $\text{Tick LTP} \le \text{Trigger Price}$.
+
+---
+
+# 🅿️ Parking Lot & Future TRD Specifications (v3 & Beyond)
+
+### 1. Live Exchange Binary WebSocket Protocol (v3)
+- **Protocol**: Binary WebSocket framing with Little-Endian uint32 price parsing ($1\text{ paise}$ integer precision).
+- **Heartbeat / Reconnect**: Exponential backoff reconnects ($500\text{ms} \rightarrow 1\text{s} \rightarrow 2\text{s} \rightarrow 5\text{s}$) with automated packet resubscription.
+
+### 2. Multi-Threading & Isolate Offloading (v3)
+- **Off-Main-Thread Indicators**: Move heavy math (e.g., 200-period EMA, Bollinger Band stddev) to background `Isolate`s via `compute()`.
+- **Zero UI Stutter**: Keep main UI thread render time strictly below $8\text{ms}$ (120fps capability on ProMotion displays).
+
+### 3. Cryptographic Storage & Biometric Auth (v3)
+- **Key Storage**: Android KeyStore / iOS Keychain hardware-backed encryption for broker API tokens and session credentials.
+- **Local Authentication**: `local_auth` package integration for biometric authentication gates.
+
