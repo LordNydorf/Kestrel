@@ -42,29 +42,29 @@ Get a thin vertical slice of all 4 features working end-to-end early (even ugly)
 - Submit before end of day, with margin — do not target the deadline itself.
 
 ## Expected-Scenarios Checklist (run literally, from the brief)
-- [ ] Restart restores watchlists + stock membership + order
-- [ ] Reorder keeps correct live-price binding per row (no stale/misrouted ticks)
-- [ ] Removed stock stops updating and is gone after restart
-- [ ] Same stock in 2 watchlists shows identical live price
-- [ ] Empty watchlist shows empty state
-- [ ] Tapping a watchlist row opens ticket pre-filled
-- [ ] Only affected cells rebuild on tick (verify via DevTools rebuild highlighting)
-- [ ] Scrolling stays smooth during ticks
-- [ ] Stress tick rate (50+/sec aggregate) → no visible freeze/drop
-- [ ] Up vs down flash color differs
-- [ ] Leaving and returning to a screen shows current, not stale, prices
-- [ ] LTP + order value update live while ticket is open
-- [ ] Order value > balance → submit blocked with clear error
-- [ ] Successful Buy: balance decreases correctly, holding created/avg-cost updated
-- [ ] Oversell blocked
-- [ ] Fractional/negative/zero qty blocked
-- [ ] No visible floating-point drift in any displayed number
-- [ ] Buy appears in Holdings (new row or updated qty/avg cost)
-- [ ] Sell to zero removes holding
-- [ ] P&L updates without full-list re-render
-- [ ] Sort by P&L reorders live as prices cross gain/loss
-- [ ] Aggregate summary always equals sum of rows
-- [ ] All 10 stocks held → smooth scroll + updates
+- [x] Restart restores watchlists + stock membership + order
+- [x] Reorder keeps correct live-price binding per row (no stale/misrouted ticks)
+- [x] Removed stock stops updating and is gone after restart
+- [x] Same stock in 2 watchlists shows identical live price
+- [x] Empty watchlist shows empty state
+- [x] Tapping a watchlist row opens ticket pre-filled
+- [x] Only affected cells rebuild on tick (verify via DevTools rebuild highlighting)
+- [x] Scrolling stays smooth during ticks
+- [x] Stress tick rate (50+/sec aggregate) → no visible freeze/drop
+- [x] Up vs down flash color differs
+- [x] Leaving and returning to a screen shows current, not stale, prices
+- [x] LTP + order value update live while ticket is open
+- [x] Order value > balance → submit blocked with clear error
+- [x] Successful Buy: balance decreases correctly, holding created/avg-cost updated
+- [x] Oversell blocked
+- [x] Fractional/negative/zero qty blocked
+- [x] No visible floating-point drift in any displayed number
+- [x] Buy appears in Holdings (new row or updated qty/avg cost)
+- [x] Sell to zero removes holding
+- [x] P&L updates without full-list re-render
+- [x] Sort by P&L reorders live as prices cross gain/loss
+- [x] Aggregate summary always equals sum of rows
+- [x] All 10 stocks held → smooth scroll + updates
 
 ## Commit Discipline
 Aim for one commit per meaningful checkpoint above, not one giant commit — this directly serves the "clear commit history" grading criterion. Suggested cadence: setup → feed → market overview → db schema → watchlists CRUD → reorder/remove → ticket form → order execution → holdings list → sort/aggregate → perf pass → tests → docs.
@@ -77,3 +77,43 @@ Aim for one commit per meaningful checkpoint above, not one giant commit — thi
 | `flutter run` failing on a clean clone | Avoid `build_runner`/codegen where possible; test fresh clone before submission |
 | Float/decimal bugs surfacing late | `Money` type built and unit-tested on Day 1–2, used everywhere from the start |
 | Video/README rushed at the very end | Dedicated Day 5 buffer, not squeezed into Day 4 |
+
+---
+
+# 🦅 Kestrel v2 Expansion Plan
+
+## 1. Scope & Goals for v2
+Kestrel v2 evolves the terminal into an institutional-grade financial trading platform:
+- **Interactive Technical Charting**: Custom Canvas Candlestick (OHLC) & Area Sparkline charts with touch scrubber.
+- **Level 2 (L2) Market Depth**: Top 5 Bids vs Top 5 Asks order book ladder with live volume bars.
+- **Limit & Stop-Loss (SL) Trigger Engine**: Support for Limit/Stop-Loss orders with in-memory tick-matching auto execution.
+- **Dedicated Orders Activity Screen (`/orders`)**: Open pending orders, executed history, order cancellation, digital receipts.
+- **Market Screener & Sector Filter**: Full-text search, sector pills, and Top Gainers / Losers / Volatility screener.
+- **Realized P&L & Portfolio Allocation**: Lifetime realized gains/loss, win rate, and sector allocation donut chart.
+- **Wallet Funds Manager**: Deposit demo capital and reset portfolio sheet.
+- **Tactile Haptics**: Subtle vibrations on stepper clicks, tabs, and trade execution.
+
+## 2. Phased v2 Milestones
+- **Phase 1: Domain, Database & Synthetic Generators**
+  - Add `OrderType` (`market`, `limit`, `stopLoss`), `OrderStatus` (`pending`, `executed`, `cancelled`), `realizedPnl`, `triggerPrice`.
+  - Update SQLite `orders` schema and `TradingRepository`.
+  - Implement `HistoricalDataService` (OHLC generator across 1D, 1W, 1M, 1Y, ALL) and `MarketDepthService` (L2 book generator).
+- **Phase 2: Technical Charting & L2 Depth UI**
+  - Implement `CandlestickPainter` and `SparklinePainter` custom painters.
+  - Build `TechnicalChart` with timeframe selector and touch scrubber.
+  - Build `MarketDepthLadder` widget.
+- **Phase 3: Limit Order Trigger Engine & Execution**
+  - Implement `OrderMatchingEngine` pure domain evaluator.
+  - Wire tick feed to trigger engine for automated execution and funds locking/releasing.
+- **Phase 4: Orders Activity Screen & Screener UI**
+  - Update bottom navigation shell to 4 tabs (`Market`, `Watchlists`, `Orders`, `Holdings`).
+  - Build `OrdersScreen` with Pending/Executed filters and cancellation action.
+  - Add search bar, sector chips, and Gainers/Losers screener to `MarketOverviewScreen`.
+- **Phase 5: Portfolio Allocation Donut, Wallet Manager & Haptics**
+  - Build `AllocationDonutChart` for sector exposure and cash ratio.
+  - Add Realized P&L badge to `PortfolioSummaryCard`.
+  - Build `FundsManagerSheet` (deposit demo funds / reset portfolio).
+  - Add tactile haptics across interactions.
+- **Phase 6: Testing & Polish**
+  - Automated unit tests for order matching, historical data, and repository v2.
+  - Verification with `flutter analyze` and `flutter test`.

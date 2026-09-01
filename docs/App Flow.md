@@ -80,3 +80,29 @@ Market Overview                Watchlist Detail              Buy/Sell Ticket
 | Ticket (Buy) | "Insufficient balance for this order" |
 | Ticket (Sell) | "You only hold X shares of Y" |
 | Ticket (qty) | "Enter a whole number greater than 0" |
+
+---
+
+# 🦅 Kestrel v2 Navigation & App Flow Additions
+
+## 1. Updated 4-Tab Navigation Shell
+```
+[ Market ]   [ Watchlists ]   [ Orders ]   [ Holdings ]
+```
+- **Market Tab (`/market`)**: Live 10-stock feed + Search Bar + Sector Filter Chips + Top Gainers / Losers Screener tabs.
+- **Watchlists Tab (`/watchlists`)**: Persistent watchlists, drag-and-drop reordering, stock picker modal.
+- **Orders Tab (`/orders`)**: Dedicated activity hub for `All`, `Open / Pending` (with instant Cancel button), `Executed`, and `Cancelled` orders.
+- **Holdings Tab (`/holdings`)**: Positions list, Realized & Unrealized P&L hero card, and Sector Allocation Donut Chart.
+
+## 2. Updated Ticket & Stock Details Flow (`/ticket/:symbol`)
+- Pre-fills stock with live LTP.
+- **Technical Chart**: Candlestick / Area Sparkline toggle with timeframe pills (`1D`, `1W`, `1M`, `1Y`, `ALL`) and interactive touch scrubber overlay.
+- **L2 Market Depth Ladder**: Top 5 Bids vs Top 5 Asks with animated depth volume bars.
+- **Order Type Selector**: Segmented tab between `MARKET`, `LIMIT`, and `STOP-LOSS (SL)`.
+- Direct quantity stepper + quick chips (`+1`, `+5`, `+10`, `+25`, `+50`, `MAX`).
+- Validation banner & atomic execution / pending order placement with tactile haptics.
+
+## 3. Funds Management Sheet
+- Tapping the wallet balance pill opens the **Funds Manager Sheet**:
+  - Deposit Demo Capital (+₹50,000, +₹1,00,000).
+  - Reset Portfolio to initial ₹1,00,000 demo state.

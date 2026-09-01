@@ -69,3 +69,20 @@ All writes on order submission (wallet debit/credit + holding upsert + order ins
 - `.gitignore` excludes build artifacts.
 - Incremental, message-per-feature commit history (see Implementation Plan.md).
 - README documents exact `flutter --version` used, and any platform caveats.
+
+---
+
+# 🦅 TRD Additions for Kestrel v2
+
+## 1. Technical Chart Canvas Performance
+- 60fps rendering budget ($< 4\text{ms}$ per paint call) using Skia/Impeller direct canvas drawing.
+- Tabular monospaced figures for zero layout shift during scrubbing.
+
+## 2. L2 Order Book Simulation Model
+- Top 5 Bids (descending price) and Top 5 Asks (ascending price) with proportional volume bars.
+
+## 3. Limit Order Trigger Engine Matching Rules
+- Limit BUY: $\text{Tick LTP} \le \text{Limit Price}$.
+- Limit SELL: $\text{Tick LTP} \ge \text{Limit Price}$.
+- Stop-Loss BUY: $\text{Tick LTP} \ge \text{Trigger Price}$.
+- Stop-Loss SELL: $\text{Tick LTP} \le \text{Trigger Price}$.

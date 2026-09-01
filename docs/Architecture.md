@@ -130,3 +130,19 @@ This design directly satisfies: single source of truth (F2), correct rebinding a
 - **Feature-first** folders keep each of the 4 required features independently reviewable (maps directly to grading rubric).
 - **Domain layer has zero Flutter/DB imports** → business logic (order validation, P&L math) is unit-testable without widget/DB harnesses.
 - **Single feed service** enforced architecturally (not by convention) — every price-consuming provider derives from `MarketDataService`, making the "single source of truth" requirement structurally guaranteed rather than merely observed.
+
+---
+
+# 🦅 Architecture Additions for Kestrel v2
+
+## 1. Layered Additions & Modules
+- **Charts Module** (`lib/features/charts/`): CustomPainter for Candlestick and Sparkline rendering + `HistoricalDataService`.
+- **Market Depth Module** (`lib/features/market_depth/`): `MarketDepthService` and `MarketDepthLadder` widget.
+- **Limit Order Engine** (`lib/domain/services/order_matching_engine.dart`): Pure domain evaluator subscribing to `MarketDataService` ticks.
+- **Orders Module** (`lib/features/orders/`): `OrdersScreen`, `OrderCard`, and `DigitalReceiptDialog`.
+- **Allocation Donut** (`lib/features/holdings/widgets/allocation_donut_chart.dart`): Sector distribution Canvas painter.
+- **Haptics Utility** (`lib/core/utils/haptics.dart`): System haptic feedback wrapper.
+
+## 2. Updated Database Schema (Orders v2 & Wallet)
+- `orders`: added `type`, `status`, `trigger_price_paise`, `realized_pnl_paise`, `executed_at`.
+- `wallet`: added `locked_paise` for pending limit buy orders.

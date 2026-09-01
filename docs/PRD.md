@@ -91,3 +91,45 @@ Fixed set of 10 NSE symbols, each with a reasonable starting price (₹):
 ## 8. Out-of-Scope Risks to Flag in README
 - Mock feed's randomness model (documented, not "real" market behavior).
 - Any simplifications made under the time constraint (see Implementation Plan.md).
+
+---
+
+# 🦅 PRD — Kestrel v2 Expansion
+
+## 1. Goals
+- Advance Kestrel from a 4-feature prototype into a complete institutional-grade trading terminal.
+- Add interactive technical charting (Candlestick & Sparkline), Level 2 (L2) market depth, Limit/Stop-Loss order trigger engine, dedicated Orders hub, market screener & sector filtering, lifetime realized P&L, portfolio allocation analytics, and tactile haptic feedback.
+
+## 2. v2 Feature Requirements
+### F5 — Interactive Technical Charting & Multi-Timeframe Scrubber
+- Custom Canvas-rendered Candlestick (OHLC) and Area Sparkline modes.
+- Timeframes: `1D`, `1W`, `1M`, `1Y`, `ALL`.
+- Interactive scrubber overlay to inspect historical price, time, and OHLC data.
+
+### F6 — Level 2 (L2) Market Depth Ladder
+- Top 5 Bids vs Top 5 Asks order book with animated volume progress bars.
+
+### F7 — Limit & Stop-Loss Trigger Engine
+- Support for Market, Limit, and Stop-Loss orders.
+- Order status: `PENDING`, `EXECUTED`, `CANCELLED`, `REJECTED`.
+- In-memory tick-driven matching engine that automatically executes pending orders when price conditions are crossed.
+
+### F8 — Dedicated Orders Activity Hub (`/orders`)
+- Filter tabs: `All`, `Pending`, `Executed`, `Cancelled`.
+- Pending order cancellation with locked funds release.
+- Detailed digital trade receipt modal.
+
+### F9 — Market Screener, Sector Filters & Search
+- Search bar by ticker or company name.
+- Sector filter chips (`Banking`, `IT`, `Energy`, `FMCG`, etc.).
+- Screener tabs (`All`, `Top Gainers`, `Top Losers`, `Most Volatile`).
+
+### F10 — Realized P&L & Sector Allocation Donut
+- Lifetime realized P&L accounting on share sales.
+- Interactive custom canvas Donut chart visualizing sector exposure and cash ratio.
+
+### F11 — Wallet Simulator Funds Manager
+- Deposit demo funds or reset portfolio to initial state.
+
+### F12 — Tactile Haptic Feedback
+- Haptic cues across buttons, chips, tabs, and trade executions.
