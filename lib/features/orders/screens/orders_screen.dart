@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../domain/models/order.dart';
 import '../../ticket/providers/trading_providers.dart';
+import '../widgets/digital_receipt_sheet.dart';
 
 final ordersFilterProvider = StateProvider<OrderStatus?>((ref) => null);
 
@@ -101,152 +102,179 @@ class OrdersScreen extends ConsumerWidget {
                       final isBuy = order.side == OrderSide.buy;
                       final stock = Universe.bySymbol[order.symbol];
 
-                      return Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
+                      return Material(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        child: InkWell(
+                          onTap: () => DigitalReceiptSheet.show(context, order),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header Row: Side + Symbol + Status Pill
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Header Row: Side + Symbol + Status Pill
                                 Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: isBuy ? AppColors.gainTint : AppColors.lossTint,
-                                        borderRadius: BorderRadius.circular(4),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: isBuy ? AppColors.gainTint : AppColors.lossTint,
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            order.side.label,
+                                            style: AppTypography.labelSmall.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: isBuy ? AppColors.gain : AppColors.loss,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          order.symbol,
+                                          style: AppTypography.titleMedium.copyWith(fontSize: 16),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '• ${order.type.label}',
+                                          style: AppTypography.labelSmall.copyWith(
+                                            fontSize: 11,
+                                            color: AppColors.muted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    _buildStatusBadge(order.status),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 8),
+
+                                // Company Name
+                                if (stock != null)
+                                  Text(
+                                    stock.name,
+                                    style: AppTypography.bodySmall.copyWith(color: AppColors.muted),
+                                  ),
+
+                                const SizedBox(height: 10),
+
+                                // Metrics Grid
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    _buildMetric('Quantity', '${order.quantity} shares'),
+                                    _buildMetric(
+                                      order.isExecuted ? 'Filled Price' : 'Target Price',
+                                      order.price.format(),
+                                    ),
+                                    _buildMetric('Total Value', order.value.format(),
+                                        isBold: true),
+                                  ],
+                                ),
+
+                                // Realized PnL (if SELL & executed)
+                                if (order.side == OrderSide.sell &&
+                                    order.isExecuted &&
+                                    !order.realizedPnl.isZero) ...[
+                                  const Divider(height: 16),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Realized P&L:',
+                                        style: AppTypography.labelSmall.copyWith(fontSize: 11),
                                       ),
-                                      child: Text(
-                                        order.side.label,
-                                        style: AppTypography.labelSmall.copyWith(
+                                      Text(
+                                        '${order.realizedPnl.paise > 0 ? '+' : ''}${order.realizedPnl.format()}',
+                                        style: AppTypography.numericSmall.copyWith(
                                           fontWeight: FontWeight.w700,
-                                          color: isBuy ? AppColors.gain : AppColors.loss,
-                                          fontSize: 10,
+                                          color: order.realizedPnl.paise > 0
+                                              ? AppColors.gain
+                                              : AppColors.loss,
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
+                                    ],
+                                  ),
+                                ],
+
+                                const Divider(height: 16),
+
+                                // Timestamp + Action Buttons
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
                                     Text(
-                                      order.symbol,
-                                      style: AppTypography.titleMedium.copyWith(fontSize: 16),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '• ${order.type.label}',
-                                      style: AppTypography.labelSmall.copyWith(
-                                        fontSize: 11,
+                                      dateFormat.format(order.timestamp),
+                                      style: AppTypography.numericSmall.copyWith(
+                                        fontSize: 10,
                                         color: AppColors.muted,
                                       ),
                                     ),
+                                    if (order.isPending)
+                                      InkWell(
+                                        onTap: () async {
+                                          Haptics.medium();
+                                          await ref
+                                              .read(tradingControllerProvider.notifier)
+                                              .cancelOrder(order.id);
+                                        },
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.lossTint,
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: Border.all(
+                                              color: AppColors.loss.withValues(alpha: 0.4),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Cancel Order',
+                                            style: AppTypography.labelSmall.copyWith(
+                                              color: AppColors.loss,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    else
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Receipt Details',
+                                            style: AppTypography.labelSmall.copyWith(
+                                              fontSize: 10,
+                                              color: AppColors.accent,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 2),
+                                          const Icon(
+                                            Icons.chevron_right_rounded,
+                                            size: 14,
+                                            color: AppColors.accent,
+                                          ),
+                                        ],
+                                      ),
                                   ],
                                 ),
-                                _buildStatusBadge(order.status),
                               ],
                             ),
-
-                            const SizedBox(height: 8),
-
-                            // Company Name
-                            if (stock != null)
-                              Text(
-                                stock.name,
-                                style: AppTypography.bodySmall.copyWith(color: AppColors.muted),
-                              ),
-
-                            const SizedBox(height: 10),
-
-                            // Metrics Grid
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _buildMetric('Quantity', '${order.quantity} shares'),
-                                _buildMetric(
-                                  order.isExecuted ? 'Filled Price' : 'Target Price',
-                                  order.price.format(),
-                                ),
-                                _buildMetric('Total Value', order.value.format(),
-                                    isBold: true),
-                              ],
-                            ),
-
-                            // Realized PnL (if SELL & executed)
-                            if (order.side == OrderSide.sell &&
-                                order.isExecuted &&
-                                !order.realizedPnl.isZero) ...[
-                              const Divider(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Realized P&L:',
-                                    style: AppTypography.labelSmall.copyWith(fontSize: 11),
-                                  ),
-                                  Text(
-                                    '${order.realizedPnl.paise > 0 ? '+' : ''}${order.realizedPnl.format()}',
-                                    style: AppTypography.numericSmall.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: order.realizedPnl.paise > 0
-                                          ? AppColors.gain
-                                          : AppColors.loss,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-
-                            const Divider(height: 16),
-
-                            // Timestamp + Action Buttons
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  dateFormat.format(order.timestamp),
-                                  style: AppTypography.numericSmall.copyWith(
-                                    fontSize: 10,
-                                    color: AppColors.muted,
-                                  ),
-                                ),
-                                if (order.isPending)
-                                  InkWell(
-                                    onTap: () async {
-                                      Haptics.medium();
-                                      await ref
-                                          .read(tradingControllerProvider.notifier)
-                                          .cancelOrder(order.id);
-                                    },
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.lossTint,
-                                        borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(
-                                          color: AppColors.loss.withValues(alpha: 0.4),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'Cancel Order',
-                                        style: AppTypography.labelSmall.copyWith(
-                                          color: AppColors.loss,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
+                          ),
                         ),
                       );
                     },

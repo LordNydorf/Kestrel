@@ -144,12 +144,13 @@ void main() {
       expect(find.byKey(const ValueKey('holding_RELIANCE')), findsOneWidget);
       expect(find.byKey(const ValueKey('holding_TCS')), findsOneWidget);
 
-      // Verify tap navigates to Ticket
+      // Verify tap opens HoldingDetailSheet
       await tester.tap(find.byKey(const ValueKey('holding_RELIANCE')));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
 
-      expect(tappedTicketSymbol, equals('RELIANCE'));
+      expect(find.text('UNREALIZED P&L'), findsOneWidget);
+      expect(find.text('Add More'), findsOneWidget);
+      expect(find.text('Square Off'), findsOneWidget);
     });
 
     testWidgets('HoldingsScreen: sort menu updates sort criteria',

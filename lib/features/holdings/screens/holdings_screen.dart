@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/holdings_providers.dart';
 import '../widgets/allocation_donut_chart.dart';
+import '../widgets/holding_detail_sheet.dart';
 import '../widgets/holding_row.dart';
 import '../widgets/portfolio_summary_card.dart';
 
@@ -164,7 +165,7 @@ class HoldingsScreen extends ConsumerWidget {
                       key: ValueKey('holding_${holding.symbol}'),
                       holding: holding,
                       onTap: () {
-                        context.push('/ticket/${holding.symbol}');
+                        HoldingDetailSheet.show(context, holding);
                       },
                     );
                   },

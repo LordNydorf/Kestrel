@@ -92,3 +92,61 @@ final sortedHoldingsProvider = Provider<AsyncValue<List<Holding>>>((ref) {
     return list;
   });
 });
+
+/// Portfolio Performance Analytics
+class PortfolioAnalytics {
+  final int totalClosedTrades;
+  final int winningTrades;
+  final int losingTrades;
+  final double winRatePercentage;
+
+  const PortfolioAnalytics({
+    required this.totalClosedTrades,
+    required this.winningTrades,
+    required this.losingTrades,
+    required this.winRatePercentage,
+  });
+
+  static const zero = PortfolioAnalytics(
+    totalClosedTrades: 0,
+    winningTrades: 0,
+    losingTrades: 0,
+    winRatePercentage: 0.0,
+  );
+}
+
+final portfolioAnalyticsProvider = Provider<PortfolioAnalytics>((ref) {
+  final ordersAsync = ref.watch(orderHistoryProvider);
+  return ordersAsync.maybeWhen(
+    data: (orders) {
+      final closedSellOrders = orders
+          .where((o) => o.side.name == 'sell' && o.status.name == 'executed' && !o.realizedPnl.isZero)
+          .toList();
+
+      if (closedSellOrders.isEmpty) return PortfolioAnalytics.zero;
+
+      int wins = 0;
+      int losses = 0;
+
+      for (final o in closedSellOrders) {
+        if (o.realizedPnl.paise > 0) {
+          wins++;
+        } else if (o.realizedPnl.paise < 0) {
+          losses++;
+        }
+      }
+
+      final total = wins + losses;
+      final winRate = total > 0 ? (wins / total) * 100.0 : 0.0;
+
+      return PortfolioAnalytics(
+        totalClosedTrades: closedSellOrders.length,
+        winningTrades: wins,
+        losingTrades: losses,
+        winRatePercentage: winRate,
+      );
+    },
+    orElse: () => PortfolioAnalytics.zero,
+  );
+});
+

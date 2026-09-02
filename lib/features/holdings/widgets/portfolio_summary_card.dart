@@ -108,6 +108,7 @@ class PortfolioSummaryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(portfolioSummaryProvider);
+    final analytics = ref.watch(portfolioAnalyticsProvider);
     final walletAsync = ref.watch(walletBalanceProvider);
     final wallet = walletAsync.value ?? Money.fromRupees(100000);
 
@@ -237,27 +238,51 @@ class PortfolioSummaryCard extends ConsumerWidget {
             ],
           ),
 
-          // Realized P&L Pill (if closed positions exist)
-          if (!summary.realizedPnl.isZero) ...[
+          // Realized P&L & Win Rate Pills (if closed positions exist)
+          if (!summary.realizedPnl.isZero || analytics.totalClosedTrades > 0) ...[
             const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: summary.realizedPnl.paise > 0
-                    ? AppColors.gainTint
-                    : AppColors.lossTint,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                'Realized P&L: ${summary.realizedPnl.paise > 0 ? '+' : ''}${summary.realizedPnl.format()}',
-                style: AppTypography.numericSmall.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: summary.realizedPnl.paise > 0
-                      ? AppColors.gain
-                      : AppColors.loss,
-                ),
-              ),
+            Row(
+              children: [
+                if (!summary.realizedPnl.isZero)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: summary.realizedPnl.paise > 0
+                          ? AppColors.gainTint
+                          : AppColors.lossTint,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Realized P&L: ${summary.realizedPnl.paise > 0 ? '+' : ''}${summary.realizedPnl.format()}',
+                      style: AppTypography.numericSmall.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: summary.realizedPnl.paise > 0
+                            ? AppColors.gain
+                            : AppColors.loss,
+                      ),
+                    ),
+                  ),
+                if (!summary.realizedPnl.isZero && analytics.totalClosedTrades > 0)
+                  const SizedBox(width: 8),
+                if (analytics.totalClosedTrades > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      'Win Rate: ${analytics.winRatePercentage.toStringAsFixed(0)}% (${analytics.winningTrades}W / ${analytics.losingTrades}L)',
+                      style: AppTypography.labelSmall.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
 
