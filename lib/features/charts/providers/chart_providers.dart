@@ -11,6 +11,15 @@ enum ChartMode {
   const ChartMode(this.label);
 }
 
+enum ChartIndicator {
+  none('None'),
+  sma20('SMA 20'),
+  bollinger('Bollinger');
+
+  final String label;
+  const ChartIndicator(this.label);
+}
+
 /// Provider for the singleton HistoricalDataService.
 final historicalDataServiceProvider = Provider<HistoricalDataService>((ref) {
   return const HistoricalDataService();
@@ -25,6 +34,11 @@ final activeTimeframeProvider =
 /// State provider for chart presentation mode (Candles vs Line).
 final chartModeProvider = StateProvider<ChartMode>((ref) {
   return ChartMode.candlestick;
+});
+
+/// State provider for chart indicator overlays (None, SMA 20, Bollinger).
+final chartIndicatorProvider = StateProvider<ChartIndicator>((ref) {
+  return ChartIndicator.none;
 });
 
 /// Provider supplying the real-time reactive candle series for a symbol.

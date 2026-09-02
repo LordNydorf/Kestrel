@@ -37,6 +37,7 @@ class _TechnicalChartState extends ConsumerState<TechnicalChart> {
   Widget build(BuildContext context) {
     final candles = ref.watch(candlesProvider(widget.symbol));
     final chartMode = ref.watch(chartModeProvider);
+    final indicator = ref.watch(chartIndicatorProvider);
 
     if (candles.isEmpty) {
       return Container(
@@ -99,9 +100,60 @@ class _TechnicalChartState extends ConsumerState<TechnicalChart> {
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
-          // 2. Active Candle OHLC Scrubber Bar
+          // 2. Technical Indicators Selector Row (Candlestick mode only)
+          if (chartMode == ChartMode.candlestick) ...[
+            Row(
+              children: [
+                Text(
+                  'INDICATOR:',
+                  style: AppTypography.labelSmall.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.muted,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                for (final ind in ChartIndicator.values) ...[
+                  GestureDetector(
+                    onTap: () {
+                      if (indicator != ind) {
+                        Haptics.selection();
+                        ref.read(chartIndicatorProvider.notifier).state = ind;
+                      }
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 6.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                      decoration: BoxDecoration(
+                        color: indicator == ind
+                            ? AppColors.accent.withValues(alpha: 0.2)
+                            : AppColors.paper,
+                        borderRadius: BorderRadius.circular(4.0),
+                        border: Border.all(
+                          color: indicator == ind
+                              ? AppColors.accent
+                              : AppColors.border.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        ind.label,
+                        style: AppTypography.labelSmall.copyWith(
+                          fontSize: 10,
+                          fontWeight: indicator == ind ? FontWeight.w700 : FontWeight.w500,
+                          color: indicator == ind ? AppColors.accent : AppColors.muted,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // 3. Active Candle OHLC Scrubber Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
             decoration: BoxDecoration(
@@ -130,7 +182,7 @@ class _TechnicalChartState extends ConsumerState<TechnicalChart> {
 
           const SizedBox(height: 12),
 
-          // 3. Interactive Custom Canvas Chart Area
+          // 4. Interactive Custom Canvas Chart Area
           SizedBox(
             height: 180,
             child: LayoutBuilder(
@@ -160,6 +212,7 @@ class _TechnicalChartState extends ConsumerState<TechnicalChart> {
                         ? CandlestickPainter(
                             candles: candles,
                             scrubIndex: _scrubIndex,
+                            indicator: indicator,
                             gainColor: AppColors.gain,
                             lossColor: AppColors.loss,
                             gridColor: AppColors.border,

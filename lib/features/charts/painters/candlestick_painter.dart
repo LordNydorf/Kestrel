@@ -2,11 +2,13 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../domain/models/candle_data.dart';
+import '../providers/chart_providers.dart';
 
-/// High-performance CustomPainter rendering OHLC candlesticks directly to Canvas.
+/// High-performance CustomPainter rendering OHLC candlesticks and Technical Indicators directly to Canvas.
 class CandlestickPainter extends CustomPainter {
   final List<CandleData> candles;
   final int? scrubIndex;
+  final ChartIndicator indicator;
   final Color gainColor;
   final Color lossColor;
   final Color gridColor;
@@ -14,6 +16,7 @@ class CandlestickPainter extends CustomPainter {
   CandlestickPainter({
     required this.candles,
     this.scrubIndex,
+    this.indicator = ChartIndicator.none,
     this.gainColor = AppColors.gain,
     this.lossColor = AppColors.loss,
     this.gridColor = AppColors.border,
@@ -57,9 +60,86 @@ class CandlestickPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(width, y), gridPaint);
     }
 
-    // 2. Draw Candlesticks
+    // 2. Draw Technical Indicator Overlays (Bollinger Channel / SMA)
     final count = candles.length;
     final candleWidth = width / count;
+
+    if (indicator == ChartIndicator.sma20 || indicator == ChartIndicator.bollinger) {
+      final List<Offset> smaPoints = [];
+      final List<Offset> upperPoints = [];
+      final List<Offset> lowerPoints = [];
+
+      for (int i = 0; i < count; i++) {
+        final period = min(20, i + 1);
+        double sum = 0.0;
+        for (int j = i - period + 1; j <= i; j++) {
+          sum += candles[j].close.paise;
+        }
+        final sma = sum / period;
+
+        double sumSqDiff = 0.0;
+        for (int j = i - period + 1; j <= i; j++) {
+          final diff = candles[j].close.paise - sma;
+          sumSqDiff += diff * diff;
+        }
+        final stdDev = sqrt(sumSqDiff / period);
+
+        final x = (i * candleWidth) + (candleWidth / 2);
+        smaPoints.add(Offset(x, priceToY(sma.round())));
+        upperPoints.add(Offset(x, priceToY((sma + (2 * stdDev)).round())));
+        lowerPoints.add(Offset(x, priceToY((sma - (2 * stdDev)).round())));
+      }
+
+      // Draw Bollinger Ribbon & Bands
+      if (indicator == ChartIndicator.bollinger && upperPoints.length > 1) {
+        final ribbonPath = Path();
+        ribbonPath.moveTo(upperPoints.first.dx, upperPoints.first.dy);
+        for (final p in upperPoints) {
+          ribbonPath.lineTo(p.dx, p.dy);
+        }
+        for (int i = lowerPoints.length - 1; i >= 0; i--) {
+          ribbonPath.lineTo(lowerPoints[i].dx, lowerPoints[i].dy);
+        }
+        ribbonPath.close();
+
+        final ribbonPaint = Paint()
+          ..color = const Color(0xFF38BDF8).withValues(alpha: 0.08)
+          ..style = PaintingStyle.fill;
+        canvas.drawPath(ribbonPath, ribbonPaint);
+
+        final bandPaint = Paint()
+          ..color = const Color(0xFF38BDF8).withValues(alpha: 0.5)
+          ..strokeWidth = 1.0
+          ..style = PaintingStyle.stroke;
+
+        final upperPath = Path()..moveTo(upperPoints.first.dx, upperPoints.first.dy);
+        for (final p in upperPoints) {
+          upperPath.lineTo(p.dx, p.dy);
+        }
+        canvas.drawPath(upperPath, bandPaint);
+
+        final lowerPath = Path()..moveTo(lowerPoints.first.dx, lowerPoints.first.dy);
+        for (final p in lowerPoints) {
+          lowerPath.lineTo(p.dx, p.dy);
+        }
+        canvas.drawPath(lowerPath, bandPaint);
+      }
+
+      // Draw SMA Line
+      if (smaPoints.length > 1) {
+        final smaPath = Path()..moveTo(smaPoints.first.dx, smaPoints.first.dy);
+        for (final p in smaPoints) {
+          smaPath.lineTo(p.dx, p.dy);
+        }
+        final smaPaint = Paint()
+          ..color = const Color(0xFFF59E0B)
+          ..strokeWidth = 1.5
+          ..style = PaintingStyle.stroke;
+        canvas.drawPath(smaPath, smaPaint);
+      }
+    }
+
+    // 3. Draw Candlesticks
     final bodyWidth = max(2.0, candleWidth * 0.7);
 
     final gainPaint = Paint()
@@ -113,7 +193,7 @@ class CandlestickPainter extends CustomPainter {
       );
     }
 
-    // 3. Draw Scrub Crosshair if active
+    // 4. Draw Scrub Crosshair if active
     if (scrubIndex != null && scrubIndex! >= 0 && scrubIndex! < count) {
       final selected = candles[scrubIndex!];
       final scrubX = (scrubIndex! * candleWidth) + (candleWidth / 2);
@@ -148,6 +228,7 @@ class CandlestickPainter extends CustomPainter {
   bool shouldRepaint(covariant CandlestickPainter oldDelegate) {
     return oldDelegate.candles != candles ||
         oldDelegate.scrubIndex != scrubIndex ||
+        oldDelegate.indicator != indicator ||
         oldDelegate.gainColor != gainColor ||
         oldDelegate.lossColor != lossColor;
   }
