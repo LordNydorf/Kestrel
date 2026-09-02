@@ -228,6 +228,25 @@ class OrdersScreen extends ConsumerWidget {
                                           await ref
                                               .read(tradingControllerProvider.notifier)
                                               .cancelOrder(order.id);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                behavior: SnackBarBehavior.floating,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  side: const BorderSide(color: AppColors.loss),
+                                                ),
+                                                duration: const Duration(seconds: 2),
+                                                content: Text(
+                                                  'Order ${order.id} cancelled',
+                                                  style: AppTypography.bodySmall.copyWith(
+                                                    color: AppColors.ink,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }
                                         },
                                         borderRadius: BorderRadius.circular(4),
                                         child: Container(

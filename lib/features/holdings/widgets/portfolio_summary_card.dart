@@ -241,7 +241,9 @@ class PortfolioSummaryCard extends ConsumerWidget {
           // Realized P&L & Win Rate Pills (if closed positions exist)
           if (!summary.realizedPnl.isZero || analytics.totalClosedTrades > 0) ...[
             const SizedBox(height: 8),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
               children: [
                 if (!summary.realizedPnl.isZero)
                   Container(
@@ -263,8 +265,6 @@ class PortfolioSummaryCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                if (!summary.realizedPnl.isZero && analytics.totalClosedTrades > 0)
-                  const SizedBox(width: 8),
                 if (analytics.totalClosedTrades > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

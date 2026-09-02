@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/symbols.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/watchlist_providers.dart';
 import '../widgets/stock_picker_sheet.dart';
@@ -137,16 +136,13 @@ class WatchlistDetailScreen extends ConsumerWidget {
                     },
                     itemBuilder: (context, index) {
                       final symbol = watchlist.symbols[index];
-                      final stock = Universe.bySymbol[symbol];
 
                       return WatchlistRow(
                         key: ValueKey('wl_${watchlist.id}_$symbol'),
                         symbol: symbol,
                         index: index,
                         onTap: () {
-                          if (stock != null) {
-                            context.push('/ticket', extra: stock);
-                          }
+                          context.push('/ticket/$symbol');
                         },
                         onRemove: () {
                           ref

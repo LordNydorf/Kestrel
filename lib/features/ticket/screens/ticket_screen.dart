@@ -260,7 +260,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: themeColor,
                     disabledBackgroundColor: AppColors.surfaceElevated,
-                    foregroundColor: Colors.black,
+                    foregroundColor: Colors.white,
                     disabledForegroundColor: AppColors.muted,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -303,7 +303,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                           style: AppTypography.bodyMedium.copyWith(
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.5,
-                            color: validation.isValid ? Colors.black : AppColors.muted,
+                            color: validation.isValid ? Colors.white : AppColors.muted,
                           ),
                         ),
                 ),
@@ -313,11 +313,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               // 1. Stock Header & Live Ticker Card
               Container(
                 decoration: BoxDecoration(
@@ -471,9 +474,11 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                       hintStyle: AppTypography.numericMedium.copyWith(color: AppColors.muted),
                     ),
                     onChanged: (val) {
-                      final parsed = double.tryParse(val);
+                      final parsed = double.tryParse(val.trim());
                       if (parsed != null && parsed > 0) {
                         setState(() => _customLimitPrice = Money.fromRupees(parsed));
+                      } else if (val.trim().isEmpty) {
+                        setState(() => _customLimitPrice = null);
                       }
                     },
                   ),
@@ -522,9 +527,11 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                       hintStyle: AppTypography.numericMedium.copyWith(color: AppColors.muted),
                     ),
                     onChanged: (val) {
-                      final parsed = double.tryParse(val);
+                      final parsed = double.tryParse(val.trim());
                       if (parsed != null && parsed > 0) {
                         setState(() => _customTriggerPrice = Money.fromRupees(parsed));
+                      } else if (val.trim().isEmpty) {
+                        setState(() => _customTriggerPrice = null);
                       }
                     },
                   ),
@@ -609,6 +616,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

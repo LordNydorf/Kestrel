@@ -21,13 +21,21 @@ class OrderConfirmationScreen extends ConsumerWidget {
     final remainingBalance = walletAsync.value ?? Universe.initialWalletBalance;
 
     final isBuy = order.side == OrderSide.buy;
-    final themeColor = isBuy ? AppColors.gain : AppColors.loss;
+    final isPending = order.isPending;
+    final themeColor = isPending
+        ? AppColors.accent
+        : (isBuy ? AppColors.gain : AppColors.loss);
     final dateStr = DateFormat('dd MMM yyyy, HH:mm:ss').format(order.timestamp);
     final stock = Universe.bySymbol[order.symbol];
 
+    final priceLabel = isPending
+        ? (order.type == OrderType.stopLoss ? 'Trigger Price' : 'Limit Price')
+        : 'Execution Price';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Order Confirmation', style: AppTypography.titleLarge),
+        title: Text(isPending ? 'Order Placed' : 'Order Confirmation',
+            style: AppTypography.titleLarge),
         automaticallyImplyLeading: false,
         elevation: 0,
       ),
@@ -42,7 +50,7 @@ class OrderConfirmationScreen extends ConsumerWidget {
                     children: [
                       const SizedBox(height: 24),
 
-                      // Animated / Styled Success Badge
+                      // Animated / Styled Success or Pending Badge
                       Container(
                         width: 80,
                         height: 80,
@@ -52,7 +60,9 @@ class OrderConfirmationScreen extends ConsumerWidget {
                           border: Border.all(color: themeColor, width: 2),
                         ),
                         child: Icon(
-                          Icons.check_rounded,
+                          isPending
+                              ? Icons.schedule_rounded
+                              : Icons.check_rounded,
                           size: 44,
                           color: themeColor,
                         ),
@@ -61,7 +71,7 @@ class OrderConfirmationScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
 
                       Text(
-                        'Order Executed',
+                        isPending ? 'Order Placed (Pending)' : 'Order Executed',
                         style: AppTypography.displayLarge.copyWith(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
@@ -69,8 +79,11 @@ class OrderConfirmationScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${order.side.label} ${order.quantity} shares of ${order.symbol}',
-                        style: AppTypography.bodyMedium,
+                        isPending
+                            ? '${order.type.label} • ${order.side.label} ${order.quantity} shares of ${order.symbol}'
+                            : '${order.side.label} ${order.quantity} shares of ${order.symbol}',
+                        style: AppTypography.bodyMedium.copyWith(color: AppColors.muted),
+                        textAlign: TextAlign.center,
                       ),
 
                       const SizedBox(height: 32),
@@ -87,6 +100,9 @@ class OrderConfirmationScreen extends ConsumerWidget {
                           children: [
                             _buildReceiptRow('Order ID', order.id, isMono: true),
                             const Divider(height: 20),
+                            _buildReceiptRow('Status', order.status.label,
+                                valueColor: themeColor, isBold: true),
+                            const Divider(height: 20),
                             _buildReceiptRow('Timestamp', dateStr),
                             const Divider(height: 20),
                             _buildReceiptRow(
@@ -95,9 +111,9 @@ class OrderConfirmationScreen extends ConsumerWidget {
                             ),
                             const Divider(height: 20),
                             _buildReceiptRow(
-                              'Side',
-                              order.side.label,
-                              valueColor: themeColor,
+                              'Side & Type',
+                              '${order.side.label} (${order.type.label})',
+                              valueColor: isBuy ? AppColors.gain : AppColors.loss,
                               isBold: true,
                             ),
                             const Divider(height: 20),
@@ -108,7 +124,7 @@ class OrderConfirmationScreen extends ConsumerWidget {
                             ),
                             const Divider(height: 20),
                             _buildReceiptRow(
-                              'Execution Price',
+                              priceLabel,
                               order.price.format(),
                               isMono: true,
                             ),
@@ -122,7 +138,7 @@ class OrderConfirmationScreen extends ConsumerWidget {
                             ),
                             const Divider(height: 20),
                             _buildReceiptRow(
-                              'Remaining Balance',
+                              'Available Cash',
                               remainingBalance.format(),
                               isMono: true,
                               valueColor: AppColors.ink,
@@ -144,18 +160,19 @@ class OrderConfirmationScreen extends ConsumerWidget {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
-                        foregroundColor: Colors.black,
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                         elevation: 0,
                       ),
-                      onPressed: () => context.go('/holdings'),
+                      onPressed: () =>
+                          context.go(isPending ? '/orders' : '/holdings'),
                       child: Text(
-                        'View Holdings',
+                        isPending ? 'View in Orders' : 'View Holdings',
                         style: AppTypography.bodyMedium.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       ),
                     ),
